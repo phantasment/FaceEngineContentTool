@@ -1,6 +1,5 @@
 #include "FaceEngineCT/ContentGenerator.h"
 #include <zlib.h>
-#include <iostream>
 
 namespace FaceEngineCT
 {
@@ -39,33 +38,9 @@ namespace FaceEngineCT
         std::size_t imageDataSize = tex2d->Width() * tex2d->Height() * 4;
         std::uint8_t compressLevel = imageDataSize > 100 ? Z_BEST_COMPRESSION : 0;
         std::fwrite(&compressLevel, 1, 1, fp);
-        std::cout << "Width: " << std::to_string(tex2d->Width()) << std::endl;
-        std::cout << "Height: " << std::to_string(tex2d->Height()) << std::endl;
-        std::cout << "Compress level: " << std::to_string(compressLevel) << std::endl;
-
-        std::cout << std::to_string(tex2d->Data()[0]) << " "
-                  << std::to_string(tex2d->Data()[1]) << " "
-                  << std::to_string(tex2d->Data()[2]) << " "
-                  << std::to_string(tex2d->Data()[3]) << std::endl;
-
-        std::cout << std::to_string(tex2d->Data()[4]) << " "
-                  << std::to_string(tex2d->Data()[5]) << " "
-                  << std::to_string(tex2d->Data()[6]) << " "
-                  << std::to_string(tex2d->Data()[7]) << std::endl;
-
-        std::cout << std::to_string(tex2d->Data()[8]) << " "
-                  << std::to_string(tex2d->Data()[9]) << " "
-                  << std::to_string(tex2d->Data()[10]) << " "
-                  << std::to_string(tex2d->Data()[11]) << std::endl;
-
-        std::cout << std::to_string(tex2d->Data()[12]) << " "
-                  << std::to_string(tex2d->Data()[13]) << " "
-                  << std::to_string(tex2d->Data()[14]) << " "
-                  << std::to_string(tex2d->Data()[15]) << std::endl;
 
         if (compressLevel > 0)
         {
-            std::cout << "Compressing image data..." << std::endl;
             std::uint8_t* compressedImageDataBuffer = new std::uint8_t[imageDataSize];
             z_stream zStream;
             zStream.zalloc = nullptr;
@@ -80,14 +55,11 @@ namespace FaceEngineCT
             deflateEnd(&zStream);
             std::size_t compressedImageDataSize = zStream.total_out;
             std::fwrite(Int32ToBytes(compressedImageDataSize).data(), 4, 1, fp);
-            std::cout << "Compressed image data size: " << std::to_string(compressedImageDataSize) << std::endl;
             std::fwrite(compressedImageDataBuffer, compressedImageDataSize, 1, fp);
-            std::cout << "Wrote compressed image data." << std::endl;
             delete[] compressedImageDataBuffer;
         }
         else
         {
-            std::cout << "Writing raw image data." << std::endl;
             std::fwrite(tex2d->Data(), imageDataSize, 1, fp);
         }
 
