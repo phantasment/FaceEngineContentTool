@@ -1,22 +1,27 @@
 #ifndef FACEENGINECT_GUI_H_
 #define FACEENGINECT_GUI_H_
 
+#include <filesystem>
+
 #include "FaceEngineCT/Texture2D.h"
+#include "FaceEngineCT/TextureFont.h"
 #include "FaceEngineCT/ContentGenerator.h"
 
 #include <wx/wx.h>
 #include <wx/rawbmp.h>
 #include <wx/progdlg.h>
+#include <wx/textdlg.h>
 
 #define ID_NEWCONTENTFILE 1
 #define ID_GENTEX2D 2
+#define ID_GENTEXFONT 3
 
 namespace FaceEngineCT
 {
-    class ImagePanel : public wxPanel
+    class ContentDisplayPanel : public wxPanel
     {
     public:
-        inline ImagePanel(wxFrame* parent) : wxPanel(parent)
+        inline ContentDisplayPanel(wxFrame* parent) : wxPanel(parent)
         {
             currentTexture = nullptr;
         }
@@ -35,15 +40,17 @@ namespace FaceEngineCT
     public:
         GUI();
     private:
-        ImagePanel* imagePanel;
-        std::string currentPath;
+        ContentDisplayPanel* displayPanel;
+        std::filesystem::path currentPath;
         Texture2D* texture;
+        TextureFont* textureFont;
 
         void OnCreateNew(wxCommandEvent&);
         void OnExit(wxCommandEvent&);
         void OnFrameClose(wxCloseEvent&);
 
         void OnGenTexture(wxCommandEvent&);
+        void OnGenTexFont(wxCommandEvent&);
 
         wxDECLARE_EVENT_TABLE();
     };

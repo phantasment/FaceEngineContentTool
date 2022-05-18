@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <cstdlib>
 #include <string>
-#include <png.h>
 
 namespace FaceEngineCT
 {
@@ -22,6 +21,17 @@ namespace FaceEngineCT
         inline std::uint32_t Height() const noexcept { return height; }
         inline std::uint8_t* Data() const noexcept { return data; }
         inline bool HasData() const noexcept { return width > 0; }
+        
+        inline void Destroy()
+        {
+            if (width > 0)
+            {
+                delete[] data;
+            }
+
+            width = 0;
+            height = 0;
+        }
 
         void Allocate(std::uint32_t, std::uint32_t);
         void FromPNGFile(const std::string&);

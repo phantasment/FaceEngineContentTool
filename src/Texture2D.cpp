@@ -1,5 +1,7 @@
 #include "FaceEngineCT/Texture2D.h"
 
+#include <png.h>
+
 namespace FaceEngineCT
 {
     void Texture2D::Allocate(std::uint32_t w, std::uint32_t h)

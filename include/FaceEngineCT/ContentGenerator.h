@@ -7,6 +7,7 @@
 #include <string>
 
 #include "FaceEngineCT/Texture2D.h"
+#include "FaceEngineCT/TextureFont.h"
 
 namespace FaceEngineCT
 {
@@ -25,6 +26,7 @@ namespace FaceEngineCT
         static const std::array<std::uint8_t, 4> Int32ToBytes(std::uint32_t) noexcept;
 
         static void GenerateTexture2D(Texture2D*, const std::string&);
+        static void GenerateTextureFont(TextureFont*, const std::string&);
     };
 }
 

@@ -5,7 +5,7 @@ namespace FaceEngineCT
 {
     // ImagePanel
 
-    void ImagePanel::OnPaint(wxPaintEvent& event)
+    void ContentDisplayPanel::OnPaint(wxPaintEvent& event)
     {
         wxPaintDC dc(this);
 
@@ -15,7 +15,7 @@ namespace FaceEngineCT
         }
     }
 
-    void ImagePanel::UpdateImage(Texture2D* texture)
+    void ContentDisplayPanel::UpdateImage(Texture2D* texture)
     {
         if (texture == nullptr)
         {
@@ -52,8 +52,8 @@ namespace FaceEngineCT
         Refresh();
     }
 
-    wxBEGIN_EVENT_TABLE(ImagePanel, wxPanel)
-        EVT_PAINT(ImagePanel::OnPaint)
+    wxBEGIN_EVENT_TABLE(ContentDisplayPanel, wxPanel)
+        EVT_PAINT(ContentDisplayPanel::OnPaint)
     wxEND_EVENT_TABLE()
 
     // GUI
@@ -63,6 +63,7 @@ namespace FaceEngineCT
         SetSize(1280, 720);
         Maximize();
         texture = new Texture2D;
+        textureFont = new TextureFont;
 
         wxMenu* fileMenu = new wxMenu;
         fileMenu->Append(ID_NEWCONTENTFILE, "&New content file...\tCtrl-N");
@@ -71,6 +72,7 @@ namespace FaceEngineCT
 
         wxMenu* generateMenu = new wxMenu;
         generateMenu->Append(ID_GENTEX2D, "&Texture2D...");
+        generateMenu->Append(ID_GENTEXFONT, "&Texture font...");
 
         wxMenuBar* menuBar = new wxMenuBar;
         menuBar->Append(fileMenu, "&File");
@@ -78,8 +80,8 @@ namespace FaceEngineCT
         SetMenuBar(menuBar);
 
         wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
-        imagePanel = new ImagePanel(this);
-        sizer->Add(imagePanel, 1, wxEXPAND);
+        displayPanel = new ContentDisplayPanel(this);
+        sizer->Add(displayPanel, 1, wxEXPAND);
         SetSizer(sizer);
     }
 
@@ -93,19 +95,68 @@ namespace FaceEngineCT
         }
 
         currentPath = dialog.GetPath().ToStdString();
+        texture->Destroy();
+        textureFont->Destroy();
+        displayPanel->UpdateImage(nullptr);
 
-        try
+        if (currentPath.extension().string() == ".png")
         {
-            texture->FromPNGFile(currentPath);
-        }
-        catch (const std::string& e)
-        {
-            wxMessageBox(e, "Error", wxICON_ERROR | wxOK, this);
-            return;
-        }
+            try
+            {
+                texture->FromPNGFile(currentPath.string());
+            }
+            catch (const std::string& e)
+            {
+                wxMessageBox(e, "Error", wxICON_ERROR | wxOK, this);
+                return;
+            }
 
-        imagePanel->UpdateImage(texture);
-        SetTitle("Face Engine Content Tool [Type: Texture2D, Path: " + currentPath + ']');
+            displayPanel->UpdateImage(texture);
+            SetTitle("Face Engine Content Tool [Type: Texture2D, Path: " + currentPath.string() + ']');
+        }
+        else if (currentPath.extension().string() == ".ttf")
+        {
+            wxTextEntryDialog dialog(this, "Enter a size for the texture font:", "Input");
+
+            if (dialog.ShowModal() == wxID_CANCEL)
+            {
+                return;
+            }
+            
+            std::uint32_t size;
+
+            try
+            {
+                size = std::stoi(dialog.GetValue().ToStdString());
+            }
+            catch (...)
+            {
+                size = 0;
+            }
+
+            if (size < 1)
+            {
+                wxMessageBox("Invalid size.", "Error", wxICON_ERROR | wxOK, this);
+                return;
+            }
+
+            try
+            {
+                textureFont->FromFontFile(currentPath.string(), size);
+            }
+            catch (const std::string& e)
+            {
+                wxMessageBox(e, "Error", wxICON_ERROR | wxOK, this);
+                return;
+            }
+
+            //displayPane->UpdateImage(textureFont);
+            SetTitle("Face Engine Content Tool [Type: TextureFont, Path: " + currentPath.string() + ']');
+        }
+        else
+        {
+            wxMessageBox("Invalid file.", "Error", wxICON_ERROR | wxOK, this);
+        }
     }
 
     void GUI::OnExit(wxCommandEvent& event)
@@ -116,6 +167,7 @@ namespace FaceEngineCT
     void GUI::OnFrameClose(wxCloseEvent& event)
     {
         delete texture;
+        delete textureFont;
         Destroy();
     }
 
@@ -135,21 +187,28 @@ namespace FaceEngineCT
         }
 
         std::string path = dialog.GetPath().ToStdString();
-        /*
-        wxProgressDialog progressDialog("Generator", "Generating content file for Texture2D...", 100, this);
-        progressDialog.Show();
-        wxSleep(2);
-        progressDialog.Update(20, "20%");
-        wxSleep(2);
-        progressDialog.Update(40, "40%");
-        wxSleep(2);
-        progressDialog.Update(60, "60%");
-        wxSleep(2);
-        progressDialog.Update(80, "80%");
-        wxSleep(2);
-        */
         ContentGenerator::GenerateTexture2D(texture, path);
         wxMessageBox("Successfully generated content file for Texture2D.", "Success", wxICON_INFORMATION | wxOK, this);
+    }
+
+    void GUI::OnGenTexFont(wxCommandEvent& event)
+    {
+        if (!textureFont->HasData())
+        {
+            wxMessageBox("Load a font first.", "Error", wxICON_ERROR | wxOK, this);
+            return;
+        }
+
+        wxFileDialog dialog(this, "Save File", "", "", "Face Engine Content File (*.fecf)|*.fecf", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+
+        if (dialog.ShowModal() == wxID_CANCEL)
+        {
+            return;
+        }
+
+        std::string path = dialog.GetPath().ToStdString();
+        ContentGenerator::GenerateTextureFont(textureFont, path);
+        wxMessageBox("Successfully generated content file for TextureFont.", "Success", wxICON_INFORMATION | wxOK, this);
     }
 
     wxBEGIN_EVENT_TABLE(GUI, wxFrame)
@@ -157,6 +216,7 @@ namespace FaceEngineCT
         EVT_MENU(ID_NEWCONTENTFILE, GUI::OnCreateNew)
         EVT_MENU(wxID_EXIT, GUI::OnExit)
         EVT_MENU(ID_GENTEX2D, GUI::OnGenTexture)
+        EVT_MENU(ID_GENTEXFONT, GUI::OnGenTexFont)
     wxEND_EVENT_TABLE()
 
     // FaceEngineCTApp
