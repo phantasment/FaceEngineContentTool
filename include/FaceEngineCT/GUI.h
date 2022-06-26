@@ -24,6 +24,7 @@ namespace FaceEngineCT
         inline ContentDisplayPanel(wxFrame* parent) : wxPanel(parent)
         {
             currentTexture = nullptr;
+            SetBackgroundColour(wxColour(255, 255, 255, 255));
         }
 
         void UpdateImage(Texture2D*);
